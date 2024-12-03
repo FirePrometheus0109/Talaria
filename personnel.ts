@@ -1,29 +1,16 @@
 function onEditInstall(e) {
   const masterSheet = SpreadsheetApp.openById('1bEDr0RbmwtFCmIrZ623B-A29SU3EPAK-da-nprCetDo').getSheetByName('Current Quarter');
-
   var sheet = e.source.getActiveSheet();
   var editedRow = e.range.getRow();
   var editedCol = e.range.getColumn();
 
   if (editedRow < 3 || editedCol < 3) return;
 
-  if (editedCol == 7 && editedRow >= 3) {
-    var cellValue = e.range.getValue();
-    if (cellValue !== "") {
-      var statusCol = 16;
-      var terminatedValue = "Terminated";
-
-      sheet.getRange(editedRow, statusCol).setValue(terminatedValue);
-    }
+  if (editedCol == 7 && editedRow >= 3 && e.range.getValue() !== "") {
+    sheet.getRange(editedRow, 16).setValue("Terminated");
   }
 
-  var timeStampCol = 1;
-  var userCol = 2;
-  var dateTime = new Date();
-  var userEmail = Session.getActiveUser().getEmail();
-
-  sheet.getRange(editedRow, timeStampCol).setValue(dateTime);
-  sheet.getRange(editedRow, userCol).setValue(userEmail);
+  sheet.getRange(editedRow, 1, 1, 2).setValues([[new Date(), Session.getActiveUser().getEmail()]]);
 
   var mastersheetCol = 27;
   var rowData = sheet.getRange(editedRow, 1, 1, sheet.getLastColumn()).getValues()[0];
@@ -32,30 +19,24 @@ function onEditInstall(e) {
   var timeValue = rowData[15]; // Column 16
   var sheet_mastersheetID = rowData[mastersheetCol - 1]; // Column 27
 
-  
   if (!sheet_mastersheetID && editedRow >= 343){
     var lastRow = masterSheet.getLastRow() + 1;
-    masterSheet.getRange(lastRow, 1, 1, masterSheet.getLastColumn()).setBackground('white');
-    masterSheet.getRange(lastRow, 1, 1, masterSheet.getLastColumn()).setFontColor('black');
+    masterSheet.getRange(lastRow, 1, 1, masterSheet.getLastColumn()).setBackground('white').setFontColor('black');
     masterSheet.getRange(lastRow, 2).setValue(nameValue);
     sheet.getRange(editedRow, mastersheetCol).setValue(lastRow);
   } else {
     switch (editedCol) {
       case 5: // Full-Name
         masterSheet.getRange(sheet_mastersheetID, 2).setValue(nameValue);
+        break;
       case 15: // HubName
         var masterSheetData = masterSheet.getDataRange().getValues();
-        var new_mastersheedId = -1;
-        for(var i = masterSheetData.length - 1; i >= 0; i--) {
-          if(masterSheetData[i][0] == hubValue && (masterSheetData[i][3] == 'Full-Time' || masterSheetData[i][3] == 'Part-Time')) {
-            new_mastersheedId = i + 1;
-            break;
-          }
-        }
+        var index = masterSheetData.reverse().findIndex(row => row[0] == hubValue && (row[3] == 'Full-Time' || row[3] == 'Part-Time'));
+        var new_mastersheedId = index >= 0 ? masterSheetData.length - index : -1;
+
         if (new_mastersheedId > 0) {
           masterSheet.insertRowAfter(new_mastersheedId);
-          masterSheet.getRange(new_mastersheedId + 1, 1, 1, masterSheet.getLastColumn()).setBackground('white');
-          masterSheet.getRange(new_mastersheedId + 1, 1, 1, masterSheet.getLastColumn()).setFontColor('black');
+          masterSheet.getRange(new_mastersheedId + 1, 1, 1, masterSheet.getLastColumn()).setBackground('white').setFontColor('black');
           var sourceRow = masterSheet.getRange(`${sheet_mastersheetID + 1}:${sheet_mastersheetID + 1}`);
           var targetRow = masterSheet.getRange(`${new_mastersheedId + 1}:${new_mastersheedId + 1}`);
           sheet.getRange(editedRow, mastersheetCol).setValue(new_mastersheedId + 1);
@@ -63,25 +44,16 @@ function onEditInstall(e) {
           masterSheet.getRange(new_mastersheedId + 1, 1).setValue(hubValue);
           masterSheet.deleteRow(sheet_mastersheetID + 1);
 
-          if (timeValue.trim().toLowerCase().includes('full-time')) {
-            masterSheet.getRange(new_mastersheedId + 1, 4).setValue('Full-Time');
-          } else if(timeValue.trim().toLowerCase().includes('part-time')) {
-            masterSheet.getRange(new_mastersheedId + 1, 4).setValue('Part-Time');
-          } else if(timeValue.trim().toLowerCase().includes('Salaried')){
-            masterSheet.getRange(new_mastersheedId + 1, 4).setValue('');
-          }
+          var status = timeValue.trim().toLowerCase().includes('full-time') ? 'Full-Time' : timeValue.trim().toLowerCase().includes('part-time') ? 'Part-Time' : '';
+          masterSheet.getRange(new_mastersheedId + 1, 4).setValue(status);
         }
+        break;
       case 16: //Full-time or Part-time
-        if (timeValue.trim().toLowerCase().includes('full-time')) {
-          masterSheet.getRange(sheet_mastersheetID, 4).setValue('Full-Time');
-        } else if(timeValue.trim().toLowerCase().includes('part-time')) {
-          masterSheet.getRange(sheet_mastersheetID, 4).setValue('Part-Time');
-        } else if(timeValue.trim().toLowerCase().includes('Salaried')){
-          masterSheet.getRange(new_mastersheedId + 1, 4).setValue('');
-        }
+        var status = timeValue.trim().toLowerCase().includes('full-time') ? 'Full-Time' : timeValue.trim().toLowerCase().includes('part-time') ? 'Part-Time' : '';
+        masterSheet.getRange(sheet_mastersheetID, 4).setValue(status);
+        break;
       default:
         break;
     }
   }
 }
-

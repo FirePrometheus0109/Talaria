@@ -4,7 +4,7 @@ function onEditInstall(e) {
   var editedRow = e.range.getRow();
   var editedCol = e.range.getColumn();
 
-  if (editedRow < 3 || editedCol < 3) return;
+  if (editedRow < 3 || editedCol < 3 || editedCol >= 150 ) return;
 
   if (editedCol == 7 && editedRow >= 3 && e.range.getValue() !== "") {
     sheet.getRange(editedRow, 16).setValue("Terminated");
@@ -12,14 +12,14 @@ function onEditInstall(e) {
 
   sheet.getRange(editedRow, 1, 1, 2).setValues([[new Date(), Session.getActiveUser().getEmail()]]);
 
-  var mastersheetCol = 27;
+  var mastersheetCol = 236;
   var rowData = sheet.getRange(editedRow, 1, 1, sheet.getLastColumn()).getValues()[0];
   var nameValue = rowData[4]; // Column 15
   var hubValue = rowData[14]; // Column 15
   var timeValue = rowData[15]; // Column 16
   var sheet_mastersheetID = rowData[mastersheetCol - 1]; // Column 27
 
-  if (!sheet_mastersheetID && editedRow >= 343){
+  if (!sheet_mastersheetID && editedRow >= 346){
     var lastRow = masterSheet.getLastRow() + 1;
     masterSheet.getRange(lastRow, 1, 1, masterSheet.getLastColumn()).setBackground('white').setFontColor('black');
     masterSheet.getRange(lastRow, 2).setValue(nameValue);
